@@ -3,24 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Methodology | Beyond Points Per Game</title>
+  <title>About &amp; Methodology | Beyond Points Per Game</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=rosterlab1">
 </head>
 <body class="app-shell methodology-shell" data-static-base="{{ url_for('static', filename='') }}">
   <header class="topbar">
     <div>
       <p class="eyebrow">NBA player role analytics</p>
-      <h1>Methodology</h1>
-      <p class="lede">Definitions for every metric, label, chart, and comparison concept used in the role explorer and team roster lab.</p>
+      <h1>About &amp; Methodology</h1>
+      <p class="lede">Project goals, team, data sources, tools, and definitions for the role explorer and team roster lab.</p>
     </div>
     <nav aria-label="Primary">
       <a href="/">Role explorer</a>
       <a href="/map">Team rosters</a>
-      <a href="/methodology" aria-current="page">Methodology</a>
+      <a href="/methodology" aria-current="page">About &amp; methods</a>
     </nav>
   </header>
 
   <main class="methodology-page">
+    <section id="about" class="panel methodology-hero">
+      <p class="eyebrow">Project overview</p>
+      <h2>Beyond Points Per Game makes NBA roles easier to explore without turning players into a single ranking.</h2>
+      <p>The interactive visualization helps people compare how player-seasons and team rotations distribute scoring, creation, rebounding, shooting efficiency, defensive-event production, and role breadth, while keeping team winning as descriptive context.</p>
+    </section>
+
+    <section class="methodology-grid" aria-label="Project overview details">
+      <article class="panel">
+        <span class="method-number">Team</span>
+        <h2>Kenny Dolgin &amp; Ryan Wenstrom</h2>
+        <p>Final project for DATASCI 209. Both team members contributed to the project design, evaluation, and presentation.</p>
+      </article>
+      <article class="panel">
+        <span class="method-number">Goal</span>
+        <h2>Reveal contribution beyond scoring</h2>
+        <p>Support comparison of player roles and roster shapes while discouraging causal claims and “best player” interpretations.</p>
+      </article>
+      <article class="panel">
+        <span class="method-number">Audience</span>
+        <h2>NBA fans and data-curious viewers</h2>
+        <p>Designed for people who know basketball but may not already be comfortable with advanced metrics or dense statistical charts.</p>
+      </article>
+    </section>
+
+    <section class="layout methodology-layout">
+      <article class="panel methodology-card">
+        <p class="eyebrow">Data sources</p>
+        <h2>Player statistics, salaries, and team results</h2>
+        <p><code>NBA Player Stats and Salaries_2010-2025.csv</code> supplies player-season box-score statistics, positions, ages, and salary fields. The project obtained this dataset through Kaggle.</p>
+        <p><code>Games.csv</code> supplies game results used to derive team-season wins and win percentage. The public app uses cleaned, reduced files in <code>static/data/</code>.</p>
+      </article>
+      <article class="panel methodology-card">
+        <p class="eyebrow">Tool choice</p>
+        <h2>Flask, D3, and static GitHub Pages</h2>
+        <p>Flask provides local routes and JSON/CSV endpoints. Vanilla JavaScript and D3 power the interactive charts and linked selections. A small build script converts the Jinja templates to static pages for reliable public hosting on GitHub Pages.</p>
+      </article>
+    </section>
+
     <section class="panel methodology-hero">
       <p class="eyebrow">Interpretation rule</p>
       <h2>These visuals describe associations, not causal player impact.</h2>
