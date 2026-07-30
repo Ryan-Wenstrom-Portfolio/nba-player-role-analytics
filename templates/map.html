@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#06111e">
   <title>NBA Team Roster Lab</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=rosterlab1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=rosterlab3">
 </head>
 <body class="app-shell team-roster-page" data-static-base="{{ url_for('static', filename='') }}">
   <header class="topbar roster-topbar">
@@ -44,6 +44,7 @@
           <div class="compare-menu-actions">
             <button id="applyCompare" type="button">Apply</button>
             <button id="removeCompare" class="button-quiet" type="button">Remove</button>
+            <button id="swapCompare" class="button-quiet" type="button">Swap selected and comparison</button>
           </div>
         </div>
       </details>
@@ -161,6 +162,6 @@
 
   <div id="tooltip" role="status" aria-live="polite"></div>
   <script src="{{ url_for('static', filename='vendor/d3.v7.min.js') }}?v=rosterlab1"></script>
-  <script src="{{ url_for('static', filename='js/team_explorer.js') }}?v=rosterlab2"></script>
+  <script src="{{ url_for('static', filename='js/team_explorer.js') }}?v=rosterlab3"></script>
 </body>
 </html>

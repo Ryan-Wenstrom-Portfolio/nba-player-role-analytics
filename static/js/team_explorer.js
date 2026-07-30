@@ -158,6 +158,7 @@
     document.getElementById("previousPlayer").addEventListener("click", function () { stepPlayer(-1); });
     document.getElementById("nextPlayer").addEventListener("click", function () { stepPlayer(1); });
     document.getElementById("applyCompare").addEventListener("click", applyComparison);
+    document.getElementById("swapCompare").addEventListener("click", swapComparison);
     document.getElementById("removeCompare").addEventListener("click", function () {
       state.compare = null;
       document.getElementById("compareMenu").open = false;
@@ -209,8 +210,9 @@
         return "<strong>" + escapeHtml(team.code) + "</strong><span>" + fmtPct(team.win_pct) + "</span>";
       })
       .on("click", function (event, team) {
+        var priorTeam = state.team;
         state.team = team.code;
-        if (state.compare === state.team) state.compare = null;
+        if (state.compare === state.team) state.compare = priorTeam;
         state.player = currentRoster()[0] ? currentRoster()[0].player : null;
         renderAll(true);
         var selected = document.querySelector(".team-card.is-selected");
@@ -226,11 +228,23 @@
     }).join("");
     select.value = state.compare || (candidates[0] ? candidates[0].code : "");
     document.getElementById("removeCompare").disabled = !state.compare;
+    document.getElementById("swapCompare").disabled = !state.compare;
+    document.querySelector("#compareMenu > summary").textContent = state.compare ? "Compare: " + state.compare : "Compare team";
   }
 
   function applyComparison() {
     var value = document.getElementById("compareTeamSelect").value;
     state.compare = value && value !== state.team ? value : null;
+    document.getElementById("compareMenu").open = false;
+    renderAll(true);
+  }
+
+  function swapComparison() {
+    if (!state.compare) return;
+    var priorTeam = state.team;
+    state.team = state.compare;
+    state.compare = priorTeam;
+    state.player = currentRoster()[0] ? currentRoster()[0].player : null;
     document.getElementById("compareMenu").open = false;
     renderAll(true);
   }
@@ -252,7 +266,8 @@
       compareBox.hidden = false;
       compareBox.innerHTML = '<span>Comparison team</span><strong>' + escapeHtml(teamName(state.compare)) + "</strong><p>" +
         (compareTeam ? fmtPct(compareTeam.win_pct) : "—") + " win % · " + compareRoster.length + "-player rotation · " +
-        fmt2(d3.mean(compareRoster, function (row) { return row.role_category_count; }) || 0) + " average role breadth</p>";
+        fmt2(d3.mean(compareRoster, function (row) { return row.role_category_count; }) || 0) +
+        " average role breadth. Use Swap teams to make this the active roster while keeping the current team for comparison.</p>";
     } else {
       compareBox.hidden = true;
       compareBox.innerHTML = "";

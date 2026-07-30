@@ -689,8 +689,12 @@ input[list] {
 
 .fingerprint-value {
   fill: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+}
+
+.fingerprint-value-group {
+  pointer-events: none;
 }
 
 .selected-player-dot {
@@ -2074,6 +2078,7 @@ body.app-shell {
 .compare-menu-body select { width: 100% !important; margin: 7px 0 10px; }
 .compare-menu-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .compare-menu-actions button:first-child { border-color: var(--roster-amber); color: var(--roster-amber); }
+.compare-menu-actions #swapCompare { grid-column: 1 / -1; }
 
 .roster-lab-grid {
   display: grid;

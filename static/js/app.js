@@ -829,7 +829,7 @@ function renderFingerprintChart(selected) {
   const height = compareMetrics.length * rowHeight + 82;
   const margin = {
     top: 20,
-    right: width < 720 ? 46 : 70,
+    right: width < 720 ? 78 : 86,
     bottom: 48,
     left: width < 720 ? 138 : 166
   };
@@ -892,15 +892,29 @@ function renderFingerprintChart(selected) {
     ].join("<br>")))
     .on("mouseleave", hideTooltip);
 
-  g.selectAll(".fingerprint-value")
+  const valueLabels = g.selectAll(".fingerprint-value-group")
     .data(points)
-    .join("text")
+    .join("g")
+    .attr("class", "fingerprint-value-group")
+    .attr("transform", d => `translate(${innerWidth + 8},${y(d.metric.key) + side(d.side) + side.bandwidth() / 2})`);
+
+  valueLabels.append("rect")
+    .attr("x", 0)
+    .attr("y", -7.5)
+    .attr("width", 58)
+    .attr("height", 15)
+    .attr("rx", 3)
+    .attr("fill", "#081522")
+    .attr("stroke", d => compareColors[d.side])
+    .attr("stroke-width", 1);
+
+  valueLabels.append("text")
     .attr("class", "fingerprint-value")
-    .attr("x", d => d.percentile > 82 ? Math.max(x(d.percentile) - 8, 22) : Math.min(x(d.percentile) + 8, innerWidth - 6))
-    .attr("y", d => y(d.metric.key) + side(d.side) + side.bandwidth() / 2)
+    .attr("x", 6)
+    .attr("y", 0)
     .attr("dy", ".35em")
-    .attr("text-anchor", d => d.percentile > 82 ? "end" : "start")
-    .attr("fill", d => d.percentile > 82 ? "#fffdf5" : "#91a3b6")
+    .attr("text-anchor", "start")
+    .style("fill", "#f7fbff")
     .text(d => `${d.side} ${ordinal(Math.round(d.percentile))}`);
 
   g.append("text")
