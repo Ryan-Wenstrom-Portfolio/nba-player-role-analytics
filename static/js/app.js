@@ -96,10 +96,12 @@ const fmtNum = d3.format(",.0f");
 const fmtMoney = d3.format("$,.1f");
 const tooltip = d3.select("#tooltip");
 const staticBase = (document.body.dataset.staticBase || "/static/").replace(/\/?$/, "/");
+const comparisonStorageKey = "nba-role-explorer-comparison-v1";
 
 let appData;
 let playerRows = [];
 let rowsByPlayer = new Map();
+let rowsByKey = new Map();
 let percentileLookup = {};
 let selectedComparison = [];
 
@@ -175,7 +177,9 @@ function rowKey(row) {
 
 function buildPlayerState() {
   rowsByPlayer = new Map();
+  rowsByKey = new Map();
   playerRows.forEach(row => {
+    rowsByKey.set(row.key, row);
     if (!rowsByPlayer.has(row.player)) rowsByPlayer.set(row.player, []);
     rowsByPlayer.get(row.player).push(row);
   });
@@ -198,14 +202,22 @@ function renderMetrics(summary) {
 
 function initPlayerComparison() {
   const players = Array.from(rowsByPlayer.keys()).sort(d3.ascending);
+  const requestedRows = readComparisonState();
   const datalist = d3.select("#playerOptions");
   datalist.selectAll("option")
     .data(players)
     .join("option")
     .attr("value", d => d);
 
-  d3.select("#playerAInput").property("value", chooseDefaultPlayer(["Jrue Holiday", "LeBron James", "Nikola Jokic"], players, 0));
-  d3.select("#playerBInput").property("value", chooseDefaultPlayer(["James Harden", "Stephen Curry", "Draymond Green"], players, 1));
+  const defaultPlayers = {
+    A: chooseDefaultPlayer(["Jrue Holiday", "LeBron James", "Nikola Jokic"], players, 0),
+    B: chooseDefaultPlayer(["James Harden", "Stephen Curry", "Draymond Green"], players, 1)
+  };
+
+  ["A", "B"].forEach(side => {
+    const row = requestedRows[side];
+    d3.select(`#player${side}Input`).property("value", row ? row.player : defaultPlayers[side]);
+  });
 
   ["A", "B"].forEach(side => {
     d3.select(`#player${side}Input`)
@@ -214,16 +226,50 @@ function initPlayerComparison() {
       })
       .on("change", () => updateSeasonOptions(side));
     d3.select(`#season${side}Select`).on("change", updateComparison);
-    updateSeasonOptions(side, false);
+    updateSeasonOptions(side, false, requestedRows[side] ? requestedRows[side].key : null);
   });
   updateComparison();
+}
+
+function readComparisonState() {
+  const params = new URLSearchParams(window.location.search);
+  let stored = {};
+  try {
+    stored = JSON.parse(window.localStorage.getItem(comparisonStorageKey) || "{}") || {};
+  } catch (error) {
+    stored = {};
+  }
+
+  return {
+    A: rowsByKey.get(params.get("a")) || rowsByKey.get(stored.A) || null,
+    B: rowsByKey.get(params.get("b")) || rowsByKey.get(stored.B) || null
+  };
+}
+
+function persistComparisonState(selected) {
+  const state = {};
+  selected.forEach(item => { state[item.side] = item.row.key; });
+
+  try {
+    window.localStorage.setItem(comparisonStorageKey, JSON.stringify(state));
+  } catch (error) {
+    // URL state still preserves a shareable selection when storage is unavailable.
+  }
+
+  const url = new URL(window.location.href);
+  ["A", "B"].forEach(side => {
+    const key = state[side];
+    if (key) url.searchParams.set(side.toLowerCase(), key);
+    else url.searchParams.delete(side.toLowerCase());
+  });
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
 function chooseDefaultPlayer(preferred, players, fallbackIndex) {
   return preferred.find(name => rowsByPlayer.has(name)) || players[fallbackIndex] || "";
 }
 
-function updateSeasonOptions(side, shouldUpdate = true) {
+function updateSeasonOptions(side, shouldUpdate = true, preferredKey = null) {
   const input = d3.select(`#player${side}Input`);
   const select = d3.select(`#season${side}Select`);
   const currentKey = select.property("value");
@@ -236,8 +282,9 @@ function updateSeasonOptions(side, shouldUpdate = true) {
     .attr("value", d => d.key)
     .text(d => `${d.year} ${d.team} (${fmtPct(d.win_pct)})`);
 
-  const keepCurrent = rows.some(row => row.key === currentKey);
-  select.property("value", keepCurrent ? currentKey : (rows[0] ? rows[0].key : ""));
+  const requestedKey = preferredKey || currentKey;
+  const keepCurrent = rows.some(row => row.key === requestedKey);
+  select.property("value", keepCurrent ? requestedKey : (rows[0] ? rows[0].key : ""));
   if (shouldUpdate) updateComparison();
 }
 
@@ -254,6 +301,7 @@ function updateComparison() {
   ].filter(item => item.row);
 
   selectedComparison = selected;
+  persistComparisonState(selected);
   renderComparisonInsight(selected);
   renderPlayerCards(selected);
   renderRoleUniverse(selected);
