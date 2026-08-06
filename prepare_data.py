@@ -61,6 +61,39 @@ TEAM_MAP = {
     ("Washington", "Wizards"): "WAS",
 }
 
+FINAL_2025_RECORDS = {
+    "ATL": (40, 42),
+    "BOS": (61, 21),
+    "BRK": (26, 56),
+    "CHO": (19, 63),
+    "CHI": (39, 43),
+    "CLE": (64, 18),
+    "DAL": (39, 43),
+    "DEN": (50, 32),
+    "DET": (44, 38),
+    "GSW": (48, 34),
+    "HOU": (52, 30),
+    "IND": (50, 32),
+    "LAC": (50, 32),
+    "LAL": (50, 32),
+    "MEM": (48, 34),
+    "MIA": (37, 45),
+    "MIL": (48, 34),
+    "MIN": (49, 33),
+    "NOP": (21, 61),
+    "NYK": (51, 31),
+    "OKC": (68, 14),
+    "ORL": (41, 41),
+    "PHI": (24, 58),
+    "PHO": (36, 46),
+    "POR": (36, 46),
+    "SAC": (40, 42),
+    "SAS": (34, 48),
+    "TOR": (30, 52),
+    "UTA": (17, 65),
+    "WAS": (18, 64),
+}
+
 OUTPUT_COLUMNS = [
     "year",
     "player",
@@ -157,13 +190,23 @@ def build_team_records() -> pd.DataFrame:
     included_game_types = {
         "Regular Season",
         "NBA Emirates Cup",
-        "Emirates NBA Cup",
     }
 
     games = games[
         games["gameType"].isin(included_game_types)
         & games["year"].between(START_YEAR, END_YEAR)
     ].copy()
+
+    cup_championship = (
+        games["gameLabel"]
+        .fillna("")
+        .eq("Emirates NBA Cup")
+        & games["gameSubLabel"]
+        .fillna("")
+        .eq("Championship")
+)
+
+    games = games[~cup_championship].copy()
 
     games["homeScore"] = pd.to_numeric(
         games["homeScore"],
@@ -256,6 +299,40 @@ def build_team_records() -> pd.DataFrame:
         team_records["wins"]
         / team_records["games_played"]
     )
+    official_2025 = pd.DataFrame(
+        [
+            {
+                "year": 2025,
+                "team": team,
+                "games_played": wins + losses,
+                "wins": wins,
+                "losses": losses,
+                "win_pct": wins / (wins + losses),
+            }
+            for team, (wins, losses) in FINAL_2025_RECORDS.items()
+        ]
+    )
+
+    team_records = pd.concat(
+        [
+            team_records[team_records["year"] != 2025],
+            official_2025,
+        ],
+        ignore_index=True,
+    )
+
+    records_2025 = team_records[
+        team_records["year"] == 2025
+    ]
+
+    if (
+        len(records_2025) != 30
+        or not records_2025["games_played"].eq(82).all()
+    ):
+        raise ValueError(
+            "The corrected 2025 standings must contain "
+            "30 teams with 82 games each."
+        )
 
     team_records["team_success_bucket"] = pd.qcut(
         team_records["win_pct"],
