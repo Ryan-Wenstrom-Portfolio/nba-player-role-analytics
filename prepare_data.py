@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -6,12 +7,15 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
+STATIC_DATA_DIR = ROOT / "static" / "data"
 
 PLAYER_FILE = RAW_DIR / "NBA Player Stats and Salaries_2010-2025.csv"
 GAMES_FILE = RAW_DIR / "Games.csv"
 
 PLAYER_OUTPUT = PROCESSED_DIR / "player_seasons_rebuilt.csv"
 TEAM_OUTPUT = PROCESSED_DIR / "team_season_records.csv"
+APP_PLAYER_OUTPUT = STATIC_DATA_DIR / "player_seasons.csv"
+APP_JSON_OUTPUT = STATIC_DATA_DIR / "nba_app_data.json"
 
 START_YEAR = 2010
 END_YEAR = 2025
@@ -576,6 +580,38 @@ def build_player_seasons(
         ["year", "player", "team"]
     ).reset_index(drop=True)
 
+def write_app_files(
+    players: pd.DataFrame,
+    teams: pd.DataFrame,
+) -> None:
+    """Write the CSV and JSON consumed by the public website."""
+    STATIC_DATA_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    players.to_csv(
+        APP_PLAYER_OUTPUT,
+        index=False,
+    )
+
+    app_data = build_app_data(
+        players,
+        teams,
+    )
+
+    with APP_JSON_OUTPUT.open(
+        "w",
+        encoding="utf-8",
+    ) as handle:
+        json.dump(
+            app_data,
+            handle,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
+
+
 
 def print_validation(
     players: pd.DataFrame,
@@ -641,6 +677,302 @@ def print_validation(
     print("\nFiles created:")
     print(PLAYER_OUTPUT)
     print(TEAM_OUTPUT)
+    print(APP_PLAYER_OUTPUT)
+    print(APP_JSON_OUTPUT)
+
+def sample_evenly(
+    frame: pd.DataFrame,
+    max_rows: int = 1200,
+) -> pd.DataFrame:
+    """Return an evenly distributed sample while preserving row order."""
+    if len(frame) <= max_rows:
+        return frame.copy()
+
+    indices = [
+        int(index * len(frame) / max_rows)
+        for index in range(max_rows)
+    ]
+
+    return frame.iloc[indices].copy()
+
+
+def json_records(frame: pd.DataFrame) -> list[dict]:
+    """Convert a DataFrame into JSON-safe records."""
+    return json.loads(
+        frame.round(3).to_json(
+            orient="records",
+        )
+    )
+
+
+def build_app_data(
+    players: pd.DataFrame,
+    teams: pd.DataFrame,
+) -> dict:
+    """Create the summary and chart data used by the D3 app."""
+    profile_mix = (
+        players.groupby(
+            [
+                "team_success_bucket",
+                "profile_group",
+            ],
+            as_index=False,
+        )
+        .agg(
+            players=("player", "size"),
+            median_win_pct=("win_pct", "median"),
+        )
+        .rename(
+            columns={
+                "profile_group": "profile",
+            }
+        )
+    )
+
+    profile_mix["share_of_bucket"] = (
+        profile_mix["players"]
+        / profile_mix.groupby(
+            "team_success_bucket"
+        )["players"].transform("sum")
+    )
+
+    efficient_lower_shot = (
+        players.groupby(
+            [
+                "team_success_bucket",
+                "efficient_lower_shot_label",
+            ],
+            as_index=False,
+        )
+        .agg(
+            players=("player", "size"),
+            median_win_pct=("win_pct", "median"),
+        )
+        .rename(
+            columns={
+                "efficient_lower_shot_label": "profile",
+            }
+        )
+    )
+
+    efficient_lower_shot["share_of_bucket"] = (
+        efficient_lower_shot["players"]
+        / efficient_lower_shot.groupby(
+            "team_success_bucket"
+        )["players"].transform("sum")
+    )
+
+    defensive_profiles = {
+        "Top steals + blocks + top scorer",
+        "Top steals + blocks, not top scorer",
+    }
+
+    defensive_rows = players[
+        players["defensive_event_profile"].isin(
+            defensive_profiles
+        )
+    ].copy()
+
+    defense_overlap = (
+        defensive_rows.groupby(
+            [
+                "team_success_bucket",
+                "defensive_event_profile",
+            ],
+            as_index=False,
+        )
+        .agg(
+            players=("player", "size"),
+            median_win_pct=("win_pct", "median"),
+        )
+        .rename(
+            columns={
+                "defensive_event_profile": "profile",
+            }
+        )
+    )
+
+    defense_overlap["share_of_bucket"] = (
+        defense_overlap["players"]
+        / defense_overlap.groupby(
+            "team_success_bucket"
+        )["players"].transform("sum")
+    )
+
+    ordered_players = players.sort_values(
+        ["year", "player", "team"]
+    ).reset_index(drop=True)
+
+    scoring_scatter = sample_evenly(
+        ordered_players[
+            [
+                "year",
+                "player",
+                "team",
+                "points_per_game",
+                "win_pct",
+                "profile_group",
+                "team_success_bucket",
+            ]
+        ]
+    )
+
+    efficiency_scatter = sample_evenly(
+        ordered_players[
+            [
+                "year",
+                "player",
+                "team",
+                "fga_per_game",
+                "efg_pct",
+                "team_success_bucket",
+            ]
+        ]
+    )
+
+    defense_scatter = sample_evenly(
+        ordered_players[
+            [
+                "year",
+                "player",
+                "team",
+                "points_per_game",
+                "stocks_per_36",
+                "defensive_event_profile",
+                "team_success_bucket",
+            ]
+        ].rename(
+            columns={
+                "stocks_per_36": "steals_blocks_per_36",
+            }
+        )
+    )
+
+    efficient_examples = (
+        players[
+            players["efficient_lower_shot_label"]
+            == "Efficient lower-shot player"
+        ]
+        .sort_values(
+            ["efg_pct", "fga_per_game"],
+            ascending=[False, True],
+        )
+        .head(3)
+    )
+
+    defensive_examples = (
+        players[
+            players["defensive_event_profile"]
+            == "Top steals + blocks, not top scorer"
+        ]
+        .sort_values(
+            "stocks_per_36",
+            ascending=False,
+        )
+        .head(3)
+    )
+
+    examples = []
+
+    for row in efficient_examples.itertuples():
+        examples.append(
+            {
+                "year": int(row.year),
+                "player": row.player,
+                "team": row.team,
+                "note": (
+                    "Efficient lower-shot contributor: "
+                    f"{row.efg_pct:.1%} eFG on "
+                    f"{row.fga_per_game:.1f} FGA/game."
+                ),
+            }
+        )
+
+    for row in defensive_examples.itertuples():
+        examples.append(
+            {
+                "year": int(row.year),
+                "player": row.player,
+                "team": row.team,
+                "note": (
+                    "Non-top scorer with defensive-event "
+                    f"production: {row.stocks_per_36:.2f} "
+                    "steals + blocks per 36."
+                ),
+            }
+        )
+
+    high_winning = players[
+        players["team_success_bucket"]
+        == "High-winning teams"
+    ]
+
+    low_winning = players[
+        players["team_success_bucket"]
+        == "Low-winning teams"
+    ]
+
+    efficient_label = "Efficient lower-shot player"
+
+    top_stocks_not_scorer_share = (
+        defensive_rows["defensive_event_profile"]
+        .eq("Top steals + blocks, not top scorer")
+        .mean()
+    )
+
+    return {
+        "summary": {
+            "playerSeasonRows": int(len(players)),
+            "teamSeasonRecords": int(len(teams)),
+            "pointsWinCorrelation": round(
+                float(
+                    players["points_per_game"].corr(
+                        players["win_pct"]
+                    )
+                ),
+                3,
+            ),
+            "roleCountWinCorrelation": round(
+                float(
+                    players["role_category_count"].corr(
+                        players["win_pct"]
+                    )
+                ),
+                3,
+            ),
+            "highWinningEfficientLowerShotShare": round(
+                float(
+                    high_winning[
+                        "efficient_lower_shot_label"
+                    ].eq(efficient_label).mean()
+                ),
+                3,
+            ),
+            "lowWinningEfficientLowerShotShare": round(
+                float(
+                    low_winning[
+                        "efficient_lower_shot_label"
+                    ].eq(efficient_label).mean()
+                ),
+                3,
+            ),
+            "topStocksNotTopScorerShare": round(
+                float(top_stocks_not_scorer_share),
+                3,
+            ),
+        },
+        "profileMix": json_records(profile_mix),
+        "efficientLowerShot": json_records(
+            efficient_lower_shot
+        ),
+        "defenseOverlap": json_records(defense_overlap),
+        "scoringScatter": json_records(scoring_scatter),
+        "efficiencyScatter": json_records(
+            efficiency_scatter
+        ),
+        "defenseScatter": json_records(defense_scatter),
+        "examples": examples,
+    }
 
 
 def main() -> None:
@@ -670,6 +1002,11 @@ def main() -> None:
     player_seasons.to_csv(
         PLAYER_OUTPUT,
         index=False,
+    )
+
+    write_app_files(
+        player_seasons,
+        team_records,
     )
 
     print_validation(
