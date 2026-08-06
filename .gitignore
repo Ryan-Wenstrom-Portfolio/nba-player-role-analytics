@@ -1,18 +1,21 @@
+# Python
 __pycache__/
 *.pyc
+.venv/
 .python_packages/
 .vercel_test_packages/
-server.*.log
+
+# Generated website
 site/
 
-# Local/generated QA and scratch outputs
-outputs/template_sources/
-outputs/logs/
-outputs/qa_docx/
-outputs/qa_presentation_notes/
-outputs/Beyond_Points_Per_Game_Midterm_Standards_Ready/
+# Local data and intermediate outputs
+data/raw/
+data/processed/
 
-# OS/editor noise
+# Logs
+*.log
+
+# Operating system and editor files
 .DS_Store
 Thumbs.db
 .vscode/
