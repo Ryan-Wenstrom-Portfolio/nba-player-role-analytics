@@ -120,3 +120,139 @@ Generated application files:
 ```text
 static/data/player_seasons.csv
 static/data/nba_app_data.json
+```
+
+Raw and intermediate datasets are excluded from Git because of file size and source-distribution considerations.
+
+## Technology
+
+- Python
+- pandas
+- Flask
+- JavaScript
+- D3.js
+- HTML and CSS
+- GitHub Actions
+- GitHub Pages
+
+Flask provides the local development environment. The public application is converted into static HTML and deployed through GitHub Pages.
+
+## Run the Existing Application Locally
+
+Create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+Install the dependencies:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+Start the local application:
+
+```powershell
+python tools/run_flask_dev.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:5001/
+```
+
+The committed application-ready CSV and JSON files allow the website to run without rebuilding the raw-data pipeline.
+
+## Rebuild the Data
+
+Place the two required source files inside:
+
+```text
+data/raw/
+```
+
+Expected filenames:
+
+```text
+NBA Player Stats and Salaries_2010-2025.csv
+Games.csv
+```
+
+Run:
+
+```powershell
+python prepare_data.py
+```
+
+The script regenerates the processed validation files and application-ready data files.
+
+See [`data/README.md`](data/README.md) for source documentation, season conventions, and the 2024–25 standings correction.
+
+## Build the Static GitHub Pages Site
+
+Run:
+
+```powershell
+python tools/build_static_pages.py
+```
+
+The static website is generated inside:
+
+```text
+site/
+```
+
+The `site/` directory is a local build artifact and is not committed.
+
+## Repository Structure
+
+```text
+nba-player-role-analytics/
+├── .github/workflows/        GitHub Pages deployment
+├── data/
+│   └── README.md             Data-source documentation
+├── static/
+│   ├── css/                  Application styling
+│   ├── data/                 Application-ready CSV and JSON
+│   ├── js/                   D3 and interface logic
+│   └── vendor/               Local D3 dependency
+├── templates/                Flask and static-page templates
+├── tools/
+│   ├── build_static_pages.py Static-site builder
+│   └── run_flask_dev.py      Local development launcher
+├── app.py                    Flask routes and local data endpoints
+├── prepare_data.py           Reproducible data pipeline
+├── requirements.txt          Pinned Python dependencies
+├── AUTHORS.md                Authorship and contribution details
+└── README.md
+```
+
+## Limitations
+
+- The analysis is descriptive and does not estimate causal player impact.
+- Steals and blocks capture only part of defensive performance.
+- Per-36 statistics normalize playing time but do not fully account for differences in role, lineup, or competition.
+- Team win percentage is team-level context and should not be interpreted as an individual-player outcome.
+- Salary fields are nominal values and may contain missing or contract-timing limitations.
+- Similarity results depend on the selected metrics and available historical sample.
+- The ten highest-minute players are used as a practical rotation proxy rather than an official rotation definition.
+- Role labels are transparent analytical categories, not objective basketball archetypes.
+
+## Collaboration and Development
+
+Originally co-developed by **Kenny Dolgin and Ryan Wenstrom** as a UC Berkeley data-visualization project.
+
+This portfolio refactor preserves the shared application while Ryan Wenstrom led the repository cleanup, reproducible pipeline reconstruction, data validation, deployment refinement, and portfolio documentation.
+
+See [`AUTHORS.md`](AUTHORS.md) for a fuller contribution summary.
+
+AI-assisted coding, debugging, and documentation tools were used as development support. Project framing, methodological decisions, validation, interpretation, and final review were human-directed.
+
+## License and Reuse
+
+No software license is currently granted for the application code.
+
+The source datasets remain subject to the terms provided by their original publishers. See [`data/README.md`](data/README.md) for source information.
