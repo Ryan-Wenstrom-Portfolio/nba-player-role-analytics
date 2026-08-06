@@ -17,7 +17,7 @@ def render_template(name, output_name):
         html,
     )
     html = html.replace('href="/"', 'href="index.html"')
-    html = html.replace('href="/map"', 'href="map.html"')
+    html = html.replace('href="/team-rosters"', 'href="team-rosters.html"')
     html = html.replace('href="/methodology"', 'href="methodology.html"')
     (SITE / output_name).write_text(html, encoding="utf-8")
 
@@ -32,7 +32,7 @@ def main():
     shutil.copytree(STATIC, SITE / "static")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
     render_template("index.html", "index.html")
-    render_template("map.html", "map.html")
+    render_template("team-rosters.html", "team-rosters.html")
     render_template("methodology.html", "methodology.html")
 
 
