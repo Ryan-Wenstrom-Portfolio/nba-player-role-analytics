@@ -9,7 +9,7 @@
 
 Both team members contributed to the shared project, including project design, analytical framing, application development, evaluation, and presentation.
 
-## Portfolio
+## Current Portfolio
 
 Ryan Wenstrom subsequently created and maintained this portfolio version of the project.
 
