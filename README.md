@@ -4,6 +4,10 @@ An interactive NBA analytics application for exploring how players contribute th
 
 Rather than producing another single “best player” ranking, the project compares player-season statistical profiles and roster composition while using team winning only as descriptive context.
 
+## Live Application
+
+[Open the interactive NBA Player Role Analytics application](https://ryan-wenstrom-portfolio.github.io/nba-player-role-analytics/)
+
 ## Project Overview
 
 The application analyzes NBA player and team data from the 2010 through 2025 seasons.
