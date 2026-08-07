@@ -7,15 +7,13 @@
 - **Kenny Dolgin**
 - **Ryan Wenstrom**
 
-The original application was created as a team project for UC Berkeley.
-
 Both team members contributed to the shared project, including project design, analytical framing, application development, evaluation, and presentation.
 
-## Portfolio Refactor
+## Portfolio
 
 Ryan Wenstrom subsequently created and maintained this portfolio version of the project.
 
-The portfolio refactor included:
+The portfolio includes:
 
 - Repository restructuring and removal of obsolete submission artifacts
 - Reconstruction of the raw-to-application data pipeline
