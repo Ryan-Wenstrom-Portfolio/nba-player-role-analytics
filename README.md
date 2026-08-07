@@ -243,16 +243,12 @@ nba-player-role-analytics/
 
 ## Collaboration and Development
 
-Originally co-developed by **Kenny Dolgin and Ryan Wenstrom** as a UC Berkeley data-visualization project.
-
-This portfolio refactor preserves the shared application while Ryan Wenstrom led the repository cleanup, reproducible pipeline reconstruction, data validation, deployment refinement, and portfolio documentation.
+Originally co-developed by **Kenny Dolgin and Ryan Wenstrom**.
 
 See [`AUTHORS.md`](AUTHORS.md) for a fuller contribution summary.
 
 AI-assisted coding, debugging, and documentation tools were used as development support. Project framing, methodological decisions, validation, interpretation, and final review were human-directed.
 
 ## License and Reuse
-
-No software license is currently granted for the application code.
 
 The source datasets remain subject to the terms provided by their original publishers. See [`data/README.md`](data/README.md) for source information.
